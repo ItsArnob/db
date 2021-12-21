@@ -1,0 +1,50 @@
+
+<!DOCTYPE HTML>
+<html>
+    <form>                     
+        <input required id="data" placeholder="new entry"/>
+        <button type="submit"> Add </button>
+    </form>
+    <p>Contents:</p>
+    <ol id="contents">
+    </ol>
+<script>   
+let ghApi = "https://api.github.com/repos/itsarnob/db/contents/test.json";
+let PAT = "ghp_..."; // replace it with github personal access token
+let contents = document.getElementById("contents");
+let dbData;
+        
+fetch(ghApi).then(res => res.json()).then(data => {
+    dbData = JSON.parse(atob(data.content))
+    dbData.contents.forEach(item => {
+        const newList = document.createElement("li");
+        newList.innerText = item;
+        contents.appendChild(newList);
+    });
+});          
+document.forms[0].onsubmit = async event => {
+    event.preventDefault()
+    const inputData = document.getElementById("data").value;
+    let shaOfDb;
+    dbData.contents.push(inputData);
+    const base64Data = btoa(JSON.stringify(dbData));   
+                                 
+    const sha = await fetch(ghApi).then(res => res.json()).then(res => { return res.sha });
+   
+    fetch(ghApi, {
+        method: "PUT",
+        headers: { 
+            "Accept": "application/vnd.github.v3+json",
+            "Authorization": `token ${PAT}`
+        },
+        body: JSON.stringify({
+            message: "added new data",
+            sha: sha,            
+            content: base64Data
+        })
+ 
+    }).then(res => res.json()).then(() => location.reload());
+}
+</script>
+
+</html>
